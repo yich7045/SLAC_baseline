@@ -89,28 +89,28 @@ class Encoder(nn.Module):
     """
     Encoder.
     """
-    def __init__(self, input_dim=3, tactile_dim=6, img_dim=256, tactile_latent_dim=32):
+    def __init__(self, input_dim=3, tactile_dim=6, img_dim=256, tactile_latent_dim=96):
         super(Encoder, self).__init__()
 
         self.net = nn.Sequential(
             # (3, 84, 84) -> (42, 42, 42)
             nn.Conv2d(input_dim, 32, 5, 2, 2),
-            nn.LeakyReLU(0.2, inplace=True),
+            nn.GELU(),
             # (32, 42, 42) -> (21, 21, 21)
             nn.Conv2d(32, 64, 3, 2, 1),
-            nn.LeakyReLU(0.2, inplace=True),
+            nn.GELU(),
             # (64, 21, 21) -> (128, 11, 21)
             nn.Conv2d(64, 128, 3, 2, 1),
-            nn.LeakyReLU(0.2, inplace=True),
+            nn.GELU(),
             # (128, 21, 21) -> (256, 11, 11)
             nn.Conv2d(128, 256, 3, 2, 1),
             # (128, 11, 11) -> (256, 6, 6)
-            nn.LeakyReLU(0.2, inplace=True),
+            nn.GELU(),
             nn.Conv2d(256, 256, 3, 2, 1),
             # (128, 6, 6) -> (256, 3, 3)
-            nn.LeakyReLU(0.2, inplace=True),
+            nn.GELU(),
             nn.Conv2d(256, img_dim, 3),
-            nn.LeakyReLU(0.2, inplace=True),
+            nn.GELU(),
         ).apply(initialize_weight)
 
         self.tactile_net = nn.Linear(tactile_dim, tactile_latent_dim).apply(initialize_weight)
@@ -137,7 +137,7 @@ class LatentModel(torch.jit.ScriptModule):
         state_shape,
         action_shape,
         img_feature_dim=256,
-        tactile_latent_dim=32,
+        tactile_latent_dim=96,
         z1_dim=32,
         z2_dim=256,
         hidden_units=(256, 256),

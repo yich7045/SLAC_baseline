@@ -105,7 +105,7 @@ class Trainer:
         t = 0
         state = self.env.reset()
         img = state[0][0]
-        tactile = state[0][1]
+        tactile = state[1]
         self.ob.reset_episode(img, tactile)
         self.algo.buffer.reset_episode(img, tactile)
 
@@ -146,7 +146,7 @@ class Trainer:
         for i in range(self.num_eval_episodes):
             state = self.env.reset()
             img = state[0][0]
-            tactile = state[0][1]
+            tactile = state[1]
             self.ob_test.reset_episode(img, tactile)
             episode_return = 0.0
             done = False
@@ -156,9 +156,11 @@ class Trainer:
                 action = np.append(action, -0.3)
                 state, reward, done, _ = self.env.step(action)
                 img = state[0][0]
-                tactile = state[0][1]
+                tactile = state[1]
                 self.ob_test.append(img, tactile, action[0:3])
-                episode_return += reward
+            if reward <= 0:
+                reward = 0
+            episode_return += reward
 
             mean_return += episode_return / self.num_eval_episodes
         return mean_return

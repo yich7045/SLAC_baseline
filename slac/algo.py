@@ -6,7 +6,8 @@ import torch
 from torch.optim import Adam
 
 from slac.buffer import ReplayBuffer
-from slac.network import GaussianPolicy, LatentModel, TwinnedQNetwork
+from slac.network.sac import GaussianPolicy, TwinnedQNetwork
+from slac.network.latent import LatentModel
 from slac.utils import create_feature_actions, grad_false, soft_update
 
 
@@ -28,7 +29,7 @@ class SlacAlgorithm:
         action_shape = (3,),
         tactile_shape = (6,),
         action_repeat = 1,
-        device = 'cuda',
+        device = 'cuda:1',
         seed = 1,
         gamma=0.99,
         batch_size_sac=256,
@@ -38,7 +39,7 @@ class SlacAlgorithm:
         lr_sac=3e-4,
         lr_latent=1e-4,
         img_feature_dim=256,
-        tactile_feature_dim = 32,
+        tactile_feature_dim = 96,
         z1_dim=32,
         z2_dim=256,
         hidden_units=(256, 256),
@@ -126,7 +127,7 @@ class SlacAlgorithm:
         state, reward, done, _ = env.step(action)
         mask = False if t == env._max_episode_steps else done
         img = state[0][0]
-        tactile = state[0][1]
+        tactile = state[1]
         ob.append(img, tactile, action[0:3])
         self.buffer.append(action[0:3], reward, mask, img, tactile, done)
         self.total_step += 1
@@ -138,7 +139,7 @@ class SlacAlgorithm:
             self.steps_record.append(self.total_step)
             state = env.reset()
             img = state[0][0]
-            tactile = state[0][1]
+            tactile = state[1]
             ob.reset_episode(img, tactile)
             self.buffer.reset_episode(img, tactile)
             save_pickle(self.end_rewards, "end_rewards.pkl")
